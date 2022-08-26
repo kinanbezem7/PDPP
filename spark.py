@@ -36,10 +36,21 @@ if __name__ == "__main__":
 
     df = spark.read.json("s3a://pinterest-data-6caaf6b1-2aef-4376-93c5-e713a3717d92/2022-08-19/*.json").dropDuplicates()
 
-    df = df.withColumn("follower_count", when(col('follower_count').like("%K"), (regexp_replace('follower_count', 'K', '').cast('int')*1000))\
-    .when(col('follower_count').like("%M"), (regexp_replace('follower_count', 'M', '').cast('int')*1000000))\
-    .when(col('follower_count').like("%B"), (regexp_replace('follower_count', 'B', '').cast('int')*1000000000))\
-    .otherwise((regexp_replace('follower_count', ' ', '').cast('int'))))\
+    # df = df.withColumn("follower_count", when(col('follower_count').like("%K"), (regexp_replace('follower_count', 'K', '').cast('int')*1000))\
+    # .when(col('follower_count').like("%M"), (regexp_replace('follower_count', 'M', '').cast('int')*1000000))\
+    # .when(col('follower_count').like("%B"), (regexp_replace('follower_count', 'B', '').cast('int')*1000000000))\
+    # .otherwise((regexp_replace('follower_count', ' ', '').cast('int'))))
+
+
+    df = df.withColumn('follower_count', 
+      when(df.follower_count.endswith('k'),regexp_replace(df.follower_count,'k','000').cast('int')) \
+     .when(df.follower_count.endswith('M'),regexp_replace(df.follower_count,'M','000000').cast('int')) \
+     .when(df.follower_count.endswith('B'),regexp_replace(df.follower_count,'B','000000000').cast('int')) \
+     .otherwise(df.follower_count)) 
+
+
+
+
 
     #df = df.withColumn("follower_count" ,  df["follower_count"].cast(IntegerType()))  
     df.printSchema()
