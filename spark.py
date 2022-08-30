@@ -6,6 +6,8 @@ from pyspark.sql.types import *
 from pyspark.sql import functions as F
 from pyspark.sql.functions import col
 from pyspark.sql.functions import *
+from pyspark.sql.functions import regexp_replace
+
 
 os.environ['PYSPARK_SUBMIT_ARGS'] = '--packages "com.amazonaws:aws-java-sdk-s3:1.12.196,org.apache.hadoop:hadoop-aws:3.3.1" pyspark-shell'
 configFilePath = r'C:\Users\kinan\.aws\credentials'
@@ -48,8 +50,8 @@ if __name__ == "__main__":
      .when(df.follower_count.endswith('B'),regexp_replace(df.follower_count,'B','000000000').cast('int')) \
      .otherwise(df.follower_count)) 
 
-
-
+    df = df.withColumn("downloaded",col("downloaded").cast("boolean"))
+    df = df.withColumn('tag_list', regexp_replace('tag_list', 'N,o, ,T,a,g,s, ,A,v,a,i,l,a,b,l,e', 'N/A')) 
 
 
     #df = df.withColumn("follower_count" ,  df["follower_count"].cast(IntegerType()))  
@@ -66,7 +68,6 @@ if __name__ == "__main__":
     # df.select("tag_list").show(50,truncate=False)
     # df.select("title").show(50,truncate=False)
     #df.select("unique_id").show(500,truncate=False)
-    df.orderBy("follower_count").select("follower_count").show(500,truncate=False)
 
 
     #df.show()
