@@ -7,9 +7,13 @@ from pyspark.sql import functions as F
 from pyspark.sql.functions import col
 from pyspark.sql.functions import *
 from pyspark.sql.functions import regexp_replace
+from pyspark.sql import HiveContext
+
+#import org.apache.spark.sql.cassandra._
 
 
-os.environ['PYSPARK_SUBMIT_ARGS'] = '--packages "com.amazonaws:aws-java-sdk-s3:1.12.196,org.apache.hadoop:hadoop-aws:3.3.1" pyspark-shell'
+
+os.environ['PYSPARK_SUBMIT_ARGS'] = '--packages "com.amazonaws:aws-java-sdk-s3:1.12.196,org.apache.hadoop:hadoop-aws:3.3.1,com.datastax.spark:spark-cassandra-connector_2.12:3.2.0" pyspark-shell'
 configFilePath = r'C:\Users\kinan\.aws\credentials'
 config = configparser.ConfigParser()
 config.read(os.path.expanduser(configFilePath))
@@ -52,11 +56,13 @@ if __name__ == "__main__":
 
     df = df.withColumn("downloaded",col("downloaded").cast("boolean"))
     df = df.withColumn('tag_list', regexp_replace('tag_list', 'N,o, ,T,a,g,s, ,A,v,a,i,l,a,b,l,e', 'N/A')) 
+    df = df.withColumnRenamed("index", "index_s")
 
 
     #df = df.withColumn("follower_count" ,  df["follower_count"].cast(IntegerType()))  
     df.printSchema()
     df.dtypes
+    df.show()
     print("hello")
     # df.select("category").show(50,truncate=False)
     # df.select("description").show(50,truncate=False)
@@ -72,8 +78,25 @@ if __name__ == "__main__":
 
     #df.show()
     # remove duplicates
+    print("hello")
+    df.write.format("org.apache.spark.sql.cassandra").options(table="pintrest", keyspace = "ks").save(mode ="append")
 
+    #df.write.mode('append').format('hive').saveAsTable('pintrest')
+
+#.format("org.apache.spark.sql.cassandra")\
     spark.stop()
+
+    # spark = SparkSession \
+    # .builder \
+    # .config("spark.local.dir", temp)\
+    # .config("spark.cassandra.connection.host", "127.0.0.1")\
+    # .appName("cassandra") \
+    # .getOrCreate()
+
+
+    # df.write.cassandraFormat("words_copy", "test", "cluster_B").save()
+
+
 
     
   
