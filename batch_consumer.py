@@ -21,13 +21,9 @@ for msg in consumer:
         data = json.loads(msg.value)
         count = count + 1
         key_json = [folder, '/', count, ".json"]
-        #k = bucket.new_key(''.join(str(key_json)))
-        #k.set_contents_from_string('')
 
         json_object = data
         print("".join(str(x) for x in key_json))
-       # print(k)
-
 
         s3_client.put_object(Body=json.dumps(json_object), Bucket='pinterest-data-6caaf6b1-2aef-4376-93c5-e713a3717d92', Key="".join(str(x) for x in key_json))
 consumer.close()
