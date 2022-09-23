@@ -8,12 +8,21 @@ from pyspark.sql.functions import *
 from pyspark.sql.functions import regexp_replace
 import json
 import pandas as pds
+from sqlalchemy import create_engine
+import pyspark
 
+
+DATABASE_TYPE = 'postgresql'
+DBAPI = 'psycopg2'
 HOST = 'localhost'
 USER = 'admin'
 PASSWORD = 'admin'
-DATABASE = 'pgserver1'
+DATABASE = 'pinterest_streaming'
 PORT = 5432
+engine = create_engine(f"{DATABASE_TYPE}+{DBAPI}://{USER}:{PASSWORD}@{HOST}:{PORT}/{DATABASE}")
+engine.connect()
+
+
 
 
 
@@ -72,14 +81,18 @@ def transform(df, epoch_id):
      .otherwise(df.follower_count)) 
     df = df.withColumn("downloaded",col("downloaded").cast("boolean"))
     df = df.withColumn('tag_list', regexp_replace('tag_list', 'N,o, ,T,a,g,s, ,A,v,a,i,l,a,b,l,e', 'N/A')) 
-    
+    df = df.withColumn('follower_count', regexp_replace('follower_count', 'User Info Error', '0')) 
+
     df.write.format("console").save()
+    pddf = df.toPandas()
+    #print(pddf)
+    pddf.info(verbose=True)
+    pddf.to_sql('experimental_data', engine, if_exists='append', index=False)
 
-
-    df.select("*").write.format("jdbc")\
-    .option("url", "jdbc:postgresql://localhost:5432/pgserver1") \
-    .option("driver", "/home/kinan/anaconda3/envs/PDPP/postgresql-42.5.0.jar").option("dbtable", "experimental_data") \
-    .option("user", "admin").option("password", "admin").save()
+    # df.select("*").write.format("jdbc")\
+    # .option("url", "jdbc:postgresql://localhost:5432/pgserver1") \
+    # .option("driver", "/home/kinan/anaconda3/envs/PDPP/postgresql-42.5.0.jar").option("dbtable", "experimental_data") \
+    # .option("user", "admin").option("password", "admin").save()
 
 #    df.select("*").write.format("jdbc")\
 #     .option("url", "jdbc:postgresql://localhost:5432/pgserver1") \
