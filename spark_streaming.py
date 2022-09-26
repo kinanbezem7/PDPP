@@ -26,7 +26,7 @@ engine.connect()
 
 
 
-os.environ["PYSPARK_SUBMIT_ARGS"] = "--packages org.apache.spark:spark-sql-kafka-0-10_2.12:3.3.0 spark_streaming.py pyspark-shell --jar /home/kinan/anaconda3/envs/PDPP/postgresql-42.5.0.jar"
+os.environ["PYSPARK_SUBMIT_ARGS"] = "--packages org.apache.spark:spark-sql-kafka-0-10_2.12:3.3.0 spark_streaming.py pyspark-shell --jar /home/kinan/anaconda3/envs/PDPP/lib/python3.9/site-packages/pyspark/jars/postgresql-42.5.0.jar"
 kafka_topic_name = "MyFirstKafkaTopic"
 kafka_bootstrap_servers = "localhost:9092"
 
@@ -51,10 +51,10 @@ schema = StructType([
 spark = SparkSession \
     .builder \
     .appName("Kafka") \
-    .config("spark.executor.extraClassPath", "/home/kinan/anaconda3/envs/PDPP/postgresql-42.5.0.jar") \
+    .config("spark.jars", "/home/kinan/anaconda3/envs/PDPP/lib/python3.9/site-packages/pyspark/jars/postgresql-42.5.0.jar") \
     .getOrCreate()
 
-
+#.config("spark.executor.extraClassPath", "/home/kinan/anaconda3/envs/PDPP/lib/python3.9/site-packages/pyspark/jars/postgresql-42.5.0.jar") \
 #spark = spark.sparkContext.setLogLevel("ERROR")
 
 df = spark \
@@ -84,21 +84,21 @@ def transform(df, epoch_id):
     df = df.withColumn('follower_count', regexp_replace('follower_count', 'User Info Error', '0')) 
 
     df.write.format("console").save()
-    pddf = df.toPandas()
-    #print(pddf)
-    pddf.info(verbose=True)
-    pddf.to_sql('experimental_data', engine, if_exists='append', index=False)
+    # pddf = df.toPandas()
+    # #print(pddf)
+    # pddf.info(verbose=True)
+    # pddf.to_sql('experimental_data', engine, if_exists='append', index=False)
 
-    # df.select("*").write.format("jdbc")\
-    # .option("url", "jdbc:postgresql://localhost:5432/pgserver1") \
-    # .option("driver", "/home/kinan/anaconda3/envs/PDPP/postgresql-42.5.0.jar").option("dbtable", "experimental_data") \
-    # .option("user", "admin").option("password", "admin").save()
+    df.select("*").write.format("jdbc")\
+    .option("url", "jdbc:postgresql://localhost:5432/pinterest_streaming") \
+    .option("driver", "org.postgresql.Driver").option("dbtable", "experimental_data") \
+    .option("user", "admin").option("password", "admin").save()
 
 #    df.select("*").write.format("jdbc")\
 #     .option("url", "jdbc:postgresql://localhost:5432/pgserver1") \
 #     .option("driver", "org.postgresql.Driver").option("dbtable", "experimental_data") \
 #     .option("user", "admin").option("password", "admin").save()
-    return df
+    return 
 
 
 
